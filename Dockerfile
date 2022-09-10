@@ -24,5 +24,29 @@ EXPOSE 7860
 
 COPY . /sd/
 
-RUN /sd/init.sh
+# RUN /sd/init.sh
+
+ENV ENV_NAME="ldm"
+ENV ENV_FILE="/sd/environment.yaml"
+ENV ENV_UPDATED=0
+RUN export ENV_MODIFIED=$(date -r $ENV_FILE "+%s")
+
+RUN if ! conda env list | grep ".*${ENV_NAME}.*" >/dev/null 2>&1; then \
+        echo "Could not find conda env: ${ENV_NAME} ... creating ..."; \
+        conda env create -f $ENV_FILE; \
+        echo "source activate ${ENV_NAME}" > /root/.bashrc; \
+        export ENV_UPDATED=1; \
+    elif [[ ! -z $CONDA_FORCE_UPDATE && $CONDA_FORCE_UPDATE == "true" ]] || (( $ENV_MODIFIED > $ENV_MODIFIED_CACHED )); then \
+        echo "Updating conda env: ${ENV_NAME} ..."; \
+        conda env update --file $ENV_FILE --prune; \
+        export ENV_UPDATED=1; \
+    fi;
+
+# Clear artifacts from conda after create/update
+# @see https://docs.conda.io/projects/conda/en/latest/commands/clean.html
+RUN if (( $ENV_UPDATED > 0 )); then \
+        conda clean --all; \
+    fi;
+
+RUN /sd/download-models.sh
 ENTRYPOINT /sd/start-server.sh
