@@ -34,6 +34,15 @@ validateDownloadModel() {
     fi
 }
 
+downloadLSDR() {
+    echo "Downloading LSDR..."
+    mkdir -p /sd/src/latent-diffusion && cd /sd/src/latent-diffusion
+    git clone https://github.com/devilismyfriend/latent-diffusion .
+    mkdir -p experiments/pretrained_models
+    wget -O experiments/pretrained_models/project.yaml https://heibox.uni-heidelberg.de/f/31a76b13ea27482981b4/?dl=1
+    wget -O experiments/pretrained_models/model.ckpt https://heibox.uni-heidelberg.de/f/578df07c8fc04ffbadf3/?dl=1
+}
+
 # Validate model files
 if [[ -z $VALIDATE_MODELS || $VALIDATE_MODELS == "true" ]]; then
     echo "Validating model files..."
@@ -41,4 +50,5 @@ if [[ -z $VALIDATE_MODELS || $VALIDATE_MODELS == "true" ]]; then
         model=($models)
         validateDownloadModel ${model[0]} ${model[1]} ${model[2]} ${model[3]}
     done
+    downloadLSDR
 fi

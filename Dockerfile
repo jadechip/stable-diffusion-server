@@ -6,7 +6,7 @@ WORKDIR /sd
 SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update && \
-    apt-get install -y libglib2.0-0 wget && \
+    apt-get install -y libglib2.0-0 wget git && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -36,17 +36,21 @@ RUN if ! conda env list | grep ".*${ENV_NAME}.*" >/dev/null 2>&1; then \
         conda env create -f $ENV_FILE; \
         echo "source activate ${ENV_NAME}" > /root/.bashrc; \
         export ENV_UPDATED=1; \
-    elif [[ ! -z $CONDA_FORCE_UPDATE && $CONDA_FORCE_UPDATE == "true" ]] || (( $ENV_MODIFIED > $ENV_MODIFIED_CACHED )); then \
-        echo "Updating conda env: ${ENV_NAME} ..."; \
-        conda env update --file $ENV_FILE --prune; \
-        export ENV_UPDATED=1; \
+    # elif [[ ! -z $CONDA_FORCE_UPDATE && $CONDA_FORCE_UPDATE == "true" ]] || (( $ENV_MODIFIED > $ENV_MODIFIED_CACHED )); then \
+    #     echo "Updating conda env: ${ENV_NAME} ..."; \
+    #     conda env update --file $ENV_FILE --prune; \
+    #     export ENV_UPDATED=1; \
     fi;
+
+SHELL ["conda", "run", "-n", "ldm", "/bin/bash", "-c"]
 
 # Clear artifacts from conda after create/update
 # @see https://docs.conda.io/projects/conda/en/latest/commands/clean.html
-RUN if (( $ENV_UPDATED > 0 )); then \
-        conda clean --all; \
-    fi;
+# RUN if (( $ENV_UPDATED > 0 )); then \
+#         conda clean --all; \
+#     fi;
 
 RUN /sd/download-models.sh
-ENTRYPOINT /sd/start-server.sh
+# ENTRYPOINT /sd/start-server.sh
+
+CMD [ "conda", "run", "-n", "ldm", "python", "-u", "server.py" ]
