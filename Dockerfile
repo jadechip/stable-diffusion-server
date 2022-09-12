@@ -24,8 +24,6 @@ EXPOSE 7860
 
 COPY . /sd/
 
-# RUN /sd/init.sh
-
 ENV ENV_NAME="ldm"
 ENV ENV_FILE="/sd/environment.yaml"
 ENV ENV_UPDATED=0
